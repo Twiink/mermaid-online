@@ -15,6 +15,8 @@ jobs:
           node-version: 20.x
       - name: build
         run: npm install && npm run build
+      - name: Test SSH
+        run: ssh -vvv -p 22 -i /home/runner/.ssh/deploy_key root@149.88.71.81 "whoami"
       - name: deploy
         uses: easingthemes/ssh-deploy@v2.1.5
         with:
