@@ -95,16 +95,14 @@ export function useExport() {
       const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
       const svgUrl = URL.createObjectURL(svgBlob);
 
-      let dataUrl: string;
-      let fileExt: string;
-      let canvas: HTMLCanvasElement | null = null;
-      let ctx: CanvasRenderingContext2D | null = null;
+      let dataUrl: string = '';
+      let fileExt: string = '';
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
 
       if (format === 'png') {
         // 将 SVG 转换为 PNG - 使用 data URL 方式避免 CORS
         const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgData);
-        canvas = document.createElement('canvas');
-        ctx = canvas.getContext('2d');
         const img = new Image();
 
         // 使用实际尺寸的两倍作为画布大小，提高清晰度

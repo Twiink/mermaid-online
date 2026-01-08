@@ -24,7 +24,6 @@ const zoomPercent = computed(() => Math.round(props.zoom * 100));
 const zoomInput = ref(zoomPercent.value);
 
 // 限制范围
-const MIN_ZOOM = 0;
 const MAX_ZOOM = 800;
 
 // 同步输入框值
@@ -36,7 +35,7 @@ watch(() => props.zoom, (newZoom) => {
 
 const handleZoomInput = () => {
   // 处理空值或无效值
-  if (zoomInput.value === null || zoomInput.value === undefined || zoomInput.value === '') {
+  if (!zoomInput.value || zoomInput.value < 0) {
     zoomInput.value = 0;
   }
   // 自动限制范围（0是允许的，表示清空）
