@@ -40,5 +40,5 @@ jobs:
         with:
           REMOTE_HOST: '149.88.71.81'
           REMOTE_USER: 'root'
-          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          SSH_PRIVATE_KEY: ${{ env.DEPLOY_KEY }}
           TARGET: '/www/wwwroot/mermaid/'
