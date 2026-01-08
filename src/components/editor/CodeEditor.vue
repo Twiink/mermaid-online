@@ -9,7 +9,6 @@ import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
 
 const props = defineProps<{
   modelValue: string;
-  errorLine?: number;
 }>();
 
 const emit = defineEmits<{
@@ -49,10 +48,6 @@ const glassEditorTheme = EditorView.theme({
   },
   '.cm-activeLine': {
     backgroundColor: 'rgba(14, 165, 233, 0.05)',
-  },
-  '.cm-errorLine': {
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
-    borderLeft: '3px solid #ef4444',
   },
   '.cm-selectionBackground': {
     backgroundColor: 'rgba(56, 189, 248, 0.2) !important',
@@ -110,11 +105,6 @@ watch(() => props.modelValue, (newValue) => {
       changes: { from: 0, to: viewRef.value.state.doc.length, insert: newValue },
     });
   }
-});
-
-// 错误行处理
-watch(() => props.errorLine, () => {
-  // 错误行高亮逻辑可以在此扩展
 });
 
 // 粘贴处理

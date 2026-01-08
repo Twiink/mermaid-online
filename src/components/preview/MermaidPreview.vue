@@ -72,12 +72,20 @@ const copyError = async () => {
   }
 };
 
+// 禁用 Mermaid 默认的错误渲染
+mermaid.parseError = (_err) => {
+  // 保持空实现以阻止 Mermaid 在 DOM 中渲染默认的错误图表
+  // 不要在此时抛出错误，以免中断渲染流程导致 isLoading 状态卡住
+};
+
 // 初始化 Mermaid
 mermaid.initialize({
   startOnLoad: false,
   theme: 'default',
   securityLevel: 'loose',
   fontFamily: 'Inter, system-ui, sans-serif',
+  // @ts-ignore - 尝试配置抑制错误渲染（某些版本支持）
+  suppressErrorRendering: true,
 });
 
 // 渲染图表
@@ -99,13 +107,20 @@ const render = async () => {
 
     const { svg } = await mermaid.render(id, props.code);
 
+    // 检查 Mermaid 是否生成了包含错误的 SVG（尽管我们已经尝试抑制）
+    if (svg.includes('Syntax error') || svg.includes('mermaid-error')) {
+      // 尝试从 SVG 中提取具体的错误信息
+      const match = svg.match(/Parse error[^<]*/);
+      const specificError = match ? match[0] : 'Syntax error in graph definition';
+      throw new Error(specificError);
+    }
+
     svgContent.value = svg;
     hasError.value = false;
     emit('rendered');
   } catch (error) {
     const err = error as Error;
-    const mermaidVersion = '11.12.2';
-    errorMessage.value = `${err.message} (mermaid version ${mermaidVersion})`;
+    errorMessage.value = err.message;
     hasError.value = true;
     svgContent.value = '';
     emit('error', err);
