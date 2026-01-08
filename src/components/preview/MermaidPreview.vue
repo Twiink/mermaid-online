@@ -14,8 +14,11 @@ const emit = defineEmits<{
 }>();
 
 const previewRef = ref<HTMLDivElement>();
+const svgContent = ref<string>('');
 const isLoading = ref(false);
 const errorMessage = ref<string>();
+const isCopied = ref(false);
+const hasError = ref(false);
 
 // 拖拽状态
 const isDragging = ref(false);
@@ -55,6 +58,20 @@ const handleMouseLeave = () => {
   }
 };
 
+// 复制错误信息
+const copyError = async () => {
+  if (!errorMessage.value) return;
+  try {
+    await navigator.clipboard.writeText(errorMessage.value);
+    isCopied.value = true;
+    setTimeout(() => {
+      isCopied.value = false;
+    }, 2000);
+  } catch (err) {
+    console.error('Failed to copy:', err);
+  }
+};
+
 // 初始化 Mermaid
 mermaid.initialize({
   startOnLoad: false,
@@ -66,12 +83,15 @@ mermaid.initialize({
 // 渲染图表
 const render = async () => {
   if (!previewRef.value || !props.code.trim()) {
-    previewRef.value!.innerHTML = '<div class="empty-state"><svg class="w-12 h-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg><p class="text-slate-400">输入 Mermaid 代码以生成图表</p></div>';
+    svgContent.value = '<div class="empty-state"><svg class="w-12 h-12 text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg><p class="text-slate-400">输入 Mermaid 代码以生成图表</p></div>';
+    errorMessage.value = undefined;
+    hasError.value = false;
     return;
   }
 
   isLoading.value = true;
   errorMessage.value = undefined;
+  hasError.value = false;
 
   try {
     // 动态设置图表 ID
@@ -79,11 +99,15 @@ const render = async () => {
 
     const { svg } = await mermaid.render(id, props.code);
 
-    previewRef.value!.innerHTML = svg;
+    svgContent.value = svg;
+    hasError.value = false;
     emit('rendered');
   } catch (error) {
     const err = error as Error;
-    errorMessage.value = err.message || '渲染失败';
+    const mermaidVersion = '11.12.2';
+    errorMessage.value = `${err.message} (mermaid version ${mermaidVersion})`;
+    hasError.value = true;
+    svgContent.value = '';
     emit('error', err);
   } finally {
     isLoading.value = false;
@@ -130,28 +154,34 @@ defineExpose({
           <div class="spinner"></div>
           <span>渲染中...</span>
         </div>
-      </Transition>
-    </div>
-
-    <!-- 错误提示 -->
-    <Transition name="slide-up">
-      <div
-        v-if="errorMessage"
-        class="error-bar"
-      >
-        <div class="flex items-start gap-3">
-          <div class="error-icon">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- 错误状态 -->
+        <div v-else-if="hasError" class="error-preview">
+          <div class="error-icon-large">
+            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <div class="flex-1">
-            <p class="error-title">渲染错误</p>
-            <p class="error-message">{{ errorMessage }}</p>
+          <div class="error-content">
+            <p class="error-text">{{ errorMessage }}</p>
+            <button
+              class="copy-btn"
+              :class="{ copied: isCopied }"
+              @click="copyError"
+            >
+              <svg v-if="!isCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              {{ isCopied ? '已复制' : '复制' }}
+            </button>
           </div>
         </div>
-      </div>
-    </Transition>
+        <!-- SVG 内容 -->
+        <div v-else class="svg-container" v-html="svgContent"></div>
+      </Transition>
+    </div>
   </div>
 </template>
 
@@ -175,16 +205,6 @@ defineExpose({
 
 .mermaid-preview:active {
   cursor: grabbing;
-}
-
-.mermaid-preview :deep(svg) {
-  max-width: none;
-  height: auto;
-  display: block;
-}
-
-.mermaid-preview :deep(svg) {
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
 }
 
 /* 空状态 */
@@ -219,37 +239,83 @@ defineExpose({
   to { transform: rotate(360deg); }
 }
 
-/* 错误提示 */
-.error-bar {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  right: 16px;
-  padding: 14px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, rgba(254, 202, 202, 0.95), rgba(252, 165, 165, 0.9));
-  border: 1px solid rgba(252, 165, 165, 0.6);
-  box-shadow: 0 8px 24px -8px rgba(239, 68, 68, 0.2);
+/* SVG 容器 */
+.svg-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.error-icon {
-  padding: 8px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
+.svg-container :deep(svg) {
+  max-width: none;
+  height: auto;
+  display: block;
+}
+
+.svg-container :deep(svg) {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.05));
+}
+
+/* 错误预览 */
+.error-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+
+.error-icon-large {
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(254, 202, 202, 0.9);
   color: #ef4444;
-  flex-shrink: 0;
+  margin-bottom: 16px;
 }
 
-.error-title {
-  font-weight: 600;
-  font-size: 14px;
-  color: #b91c1c;
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 80%;
 }
 
-.error-message {
+.error-text {
   font-size: 13px;
   color: #dc2626;
-  margin-top: 2px;
+  font-family: ui-monospace, monospace;
+  word-break: break-all;
+  line-height: 1.6;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(252, 165, 165, 0.6);
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.copy-btn.copied {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #16a34a;
 }
 
 /* 动画 */
@@ -261,16 +327,5 @@ defineExpose({
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(10px);
 }
 </style>
