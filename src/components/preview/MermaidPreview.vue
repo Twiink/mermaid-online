@@ -190,8 +190,36 @@ defineExpose({
 
 <template>
   <div class="mermaid-preview-container h-full w-full">
+    <!-- 错误状态 - 居中显示，不参与拖拽缩放 -->
+    <div v-if="hasError" class="error-overlay">
+      <div class="error-preview">
+        <div class="error-icon-large">
+          <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L16c-.77 1.3333.34 .192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div class="error-content">
+          <p class="error-text">{{ errorMessage }}</p>
+          <button
+            class="copy-btn"
+            :class="{ copied: isCopied }"
+            @click="copyError"
+          >
+            <svg v-if="!isCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ isCopied ? '已复制' : '复制' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- 预览区域 - 画布式拖拽 -->
     <div
+      v-show="!hasError"
       ref="previewRef"
       class="mermaid-preview"
     >
@@ -211,30 +239,6 @@ defineExpose({
             <div class="spinner"></div>
             <span>渲染中...</span>
           </div>
-          <!-- 错误状态 -->
-          <div v-else-if="hasError" class="error-preview">
-            <div class="error-icon-large">
-              <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <div class="error-content">
-              <p class="error-text">{{ errorMessage }}</p>
-              <button
-                class="copy-btn"
-                :class="{ copied: isCopied }"
-                @click="copyError"
-              >
-                <svg v-if="!isCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                {{ isCopied ? '已复制' : '复制' }}
-              </button>
-            </div>
-          </div>
           <!-- SVG 内容 -->
           <div v-else class="svg-container" v-html="svgContent"></div>
         </Transition>
@@ -249,6 +253,20 @@ defineExpose({
   border-radius: 16px;
   height: 100%;
   overflow: hidden;
+  position: relative;
+}
+
+/* 错误提示覆盖层 - 居中显示 */
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
 }
 
 .mermaid-preview {

@@ -4,7 +4,7 @@ import { EditorView, basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { markdown } from '@codemirror/lang-markdown';
 import { keymap } from '@codemirror/view';
-import { defaultKeymap, indentWithTab } from '@codemirror/commands';
+import { defaultKeymap, indentWithTab, undo, redo } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
 
 const props = defineProps<{
@@ -121,9 +121,25 @@ const getValue = () => viewRef.value?.state.doc.toString() || '';
 // 聚焦编辑器
 const focus = () => viewRef.value?.focus();
 
+// 撤销
+const doUndo = () => {
+  if (viewRef.value) {
+    undo(viewRef.value);
+  }
+};
+
+// 重做
+const doRedo = () => {
+  if (viewRef.value) {
+    redo(viewRef.value);
+  }
+};
+
 defineExpose({
   getValue,
   focus,
+  doUndo,
+  doRedo,
 });
 </script>
 

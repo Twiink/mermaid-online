@@ -20,6 +20,7 @@ const { exportImage, isExporting } = useExport();
 
 // 组件引用
 const previewRef = ref<InstanceType<typeof MermaidPreview> | null>(null);
+const editorRef = ref<InstanceType<typeof CodeEditor> | null>(null);
 
 // 工具栏事件处理
 const handlePaste = async () => {
@@ -35,11 +36,11 @@ const handleCopy = async () => {
 };
 
 const handleUndo = () => {
-  // CodeMirror 自带撤销
+  editorRef.value?.doUndo();
 };
 
 const handleRedo = () => {
-  // CodeMirror 自带重做
+  editorRef.value?.doRedo();
 };
 
 const handleExport = async (format: ExportFormat) => {
@@ -108,6 +109,7 @@ const handleKeydown = (e: KeyboardEvent) => {
 
         <div class="card-body flex-1 relative overflow-hidden">
           <CodeEditor
+            ref="editorRef"
             v-model="code"
           />
         </div>
