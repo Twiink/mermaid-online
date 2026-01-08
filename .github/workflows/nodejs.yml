@@ -15,17 +15,10 @@ jobs:
           node-version: 20.x
       - name: build
         run: npm install && npm run build
-      - name: Debug key (no print)
-        run: |
-          ls -l ~/.ssh || true
-          ssh -V
-          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
       - name: deploy
         uses: easingthemes/ssh-deploy@v2.1.5
-        env:
+        with:
+          REMOTE_HOST: '149.88.71.81'
+          REMOTE_USER: 'root'
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          SOURCE: "dist/*"
-          REMOTE_HOST: 149.88.71.81
-          REMOTE_USER: root
-          TARGET: "/www/wwwroot/mermaid/"
-
+          TARGET: '/www/wwwroot/mermaid/'
