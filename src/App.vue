@@ -11,14 +11,12 @@ import type { ExportFormat } from '@/types';
 const {
   code,
   zoom,
-  error,
   clearCode,
   pasteCode,
   copyCode,
   zoomIn,
   zoomOut,
   resetZoom,
-  handleRenderError,
 } = useMermaid();
 
 const { exportImage, isExporting } = useExport();
@@ -123,30 +121,9 @@ const handleKeydown = (e: KeyboardEvent) => {
         <div class="card-body flex-1 relative">
           <CodeEditor
             v-model="code"
-            :error-line="error?.line"
           />
         </div>
 
-        <!-- 错误提示 -->
-        <Transition name="slide-up">
-          <div
-            v-if="error"
-            class="error-banner"
-          >
-            <div class="flex items-start gap-3">
-              <div class="error-icon">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <p class="error-title">语法错误</p>
-                <p class="error-message">{{ error.message }}</p>
-                <p v-if="error.line" class="error-location">第 {{ error.line }} 行</p>
-              </div>
-            </div>
-          </div>
-        </Transition>
       </section>
 
       <!-- 右侧：预览区 -->
@@ -169,7 +146,6 @@ const handleKeydown = (e: KeyboardEvent) => {
             ref="previewRef"
             :code="code"
             :zoom="zoom"
-            @error="handleRenderError"
           />
         </div>
       </section>
@@ -257,56 +233,5 @@ const handleKeydown = (e: KeyboardEvent) => {
 .card-body {
   padding: 16px;
   background: rgba(255, 255, 255, 0.35);
-}
-
-/* 错误提示 */
-.error-banner {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  padding: 16px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(254, 202, 202, 0.95), rgba(252, 165, 165, 0.9));
-  border: 1px solid rgba(252, 165, 165, 0.6);
-  box-shadow: 0 10px 30px -10px rgba(239, 68, 68, 0.25);
-}
-
-.error-icon {
-  padding: 8px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #ef4444;
-}
-
-.error-title {
-  font-weight: 600;
-  font-size: 15px;
-  color: #b91c1c;
-}
-
-.error-message {
-  font-size: 13px;
-  color: #dc2626;
-  margin-top: 2px;
-}
-
-.error-location {
-  font-size: 12px;
-  color: rgba(239, 68, 68, 0.7);
-  margin-top: 6px;
-  font-family: ui-monospace, monospace;
-}
-
-/* 动画 */
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
 }
 </style>
