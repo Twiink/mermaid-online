@@ -1,5 +1,57 @@
-# Vue 3 + TypeScript + Vite
+# Mermaid Online
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+当 AI 输出的 Mermaid 图表无法渲染时，市面上的在线编辑器往往广告繁多、功能受限（无法一键清空、无法导出图片）。为此开发了这个简洁无广告的在线编辑器。
+一个简洁的 Mermaid 图表在线编辑器，实时预览，支持自由缩放和拖拽。
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 功能特性
+
+- **实时预览** - 输入 Mermaid 代码后立即生成图表
+- **画布式预览** - 支持自由拖拽和缩放预览区域
+- **缩放控制** - 支持 Ctrl+滚轮缩放，或直接输入 1%-800%
+- **撤销/重做** - 支持编辑器内容的撤销和重做操作
+- **导出图片** - 支持导出 PNG 和 SVG 格式
+- **错误提示** - 语法错误时在预览区域中央显示提示
+
+## 操作说明
+
+| 操作 | 方式 |
+|------|------|
+| 粘贴代码 | Ctrl+V 或工具栏粘贴按钮 |
+| 清空内容 | 工具栏清空按钮 |
+| 撤销 | Ctrl+Z 或工具栏撤销按钮 |
+| 重做 | Ctrl+Shift+Z 或工具栏重做按钮 |
+| 复制代码 | 工具栏复制按钮 |
+| 缩放 | Ctrl+滚轮 或直接输入百分比 |
+| 移动预览 | 鼠标拖拽 |
+| 重置位置 | 双击预览区域 |
+| 导出 PNG | 工具栏 PNG 按钮 |
+| 导出 SVG | 工具栏 SVG 按钮 |
+
+## 技术栈
+
+- Vue 3
+- TypeScript
+- Vite
+- CodeMirror 6 (代码编辑器)
+- Mermaid (图表渲染)
+
+## 开发
+
+```bash
+# 安装依赖
+npm install
+
+# 开发模式
+npm run dev
+
+# 构建生产版本
+npm run build
+```
+
+## License
+
+MIT
+
+## 反馈
+
+如果有任何问题或建议，欢迎在 [GitHub Issues](https://github.com/Twiink/mermaid-online/issues) 中提出。
