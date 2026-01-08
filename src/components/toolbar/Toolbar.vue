@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import type { ZoomLevel, ExportFormat } from '@/types';
 
 const props = defineProps<{
@@ -16,27 +16,49 @@ const emit = defineEmits<{
   (e: 'copy'): void;
   (e: 'undo'): void;
   (e: 'redo'): void;
-  (e: 'zoomIn'): void;
-  (e: 'zoomOut'): void;
-  (e: 'zoomReset'): void;
   (e: 'export', format: ExportFormat): void;
+  (e: 'zoomChange', zoom: ZoomLevel): void;
 }>();
 
 const zoomPercent = computed(() => Math.round(props.zoom * 100));
+const zoomInput = ref(zoomPercent.value);
 
-const zoomLevels: ZoomLevel[] = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
+// 限制范围
+const MIN_ZOOM = 0;
+const MAX_ZOOM = 800;
 
-const handleZoomIn = () => {
-  const currentIndex = zoomLevels.indexOf(props.zoom);
-  if (currentIndex < zoomLevels.length - 1) {
-    emit('zoomIn');
+// 同步输入框值
+watch(() => props.zoom, (newZoom) => {
+  if (zoomInput.value !== 0) {
+    zoomInput.value = Math.round(newZoom * 100);
+  }
+});
+
+const handleZoomInput = () => {
+  // 处理空值或无效值
+  if (zoomInput.value === null || zoomInput.value === undefined || zoomInput.value === '') {
+    zoomInput.value = 0;
+  }
+  // 自动限制范围（0是允许的，表示清空）
+  if (zoomInput.value > MAX_ZOOM) {
+    zoomInput.value = MAX_ZOOM;
+  }
+  // 0 表示清空，其他值正常缩放
+  if (zoomInput.value === 0) {
+    emit('zoomChange', 0.01 as ZoomLevel); // 用最小值代替0，避免完全不可见
+  } else {
+    emit('zoomChange', (zoomInput.value / 100) as ZoomLevel);
   }
 };
 
-const handleZoomOut = () => {
-  const currentIndex = zoomLevels.indexOf(props.zoom);
-  if (currentIndex > 0) {
-    emit('zoomOut');
+const handleBlur = () => {
+  // 失焦时恢复当前实际缩放值
+  zoomInput.value = zoomPercent.value;
+};
+
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    (e.target as HTMLInputElement).blur();
   }
 };
 </script>
@@ -105,31 +127,18 @@ const handleZoomOut = () => {
         </button>
       </div>
 
-      <!-- 中间：缩放控制 -->
-      <div class="zoom-control">
-        <button
-          class="zoom-btn"
-          :disabled="zoom <= 0.5"
-          title="缩小"
-          @click="handleZoomOut"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-          </svg>
-        </button>
-
-        <span class="zoom-text">{{ zoomPercent }}%</span>
-
-        <button
-          class="zoom-btn"
-          :disabled="zoom >= 3"
-          title="放大"
-          @click="handleZoomIn"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
+      <!-- 中间：缩放控制（使用鼠标滚轮缩放或手动输入） -->
+      <div class="zoom-display">
+        <input
+          v-model.number="zoomInput"
+          type="number"
+          class="zoom-input"
+          @input="handleZoomInput"
+          @blur="handleBlur"
+          @keydown="handleKeydown"
+        />
+        <span class="zoom-unit">%</span>
+        <span class="zoom-hint">Ctrl+滚轮</span>
       </div>
 
       <!-- 右侧：导出操作 -->
@@ -259,42 +268,51 @@ const handleZoomOut = () => {
 }
 
 /* 缩放控制 */
-.zoom-control {
+.zoom-display {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   background: rgba(255, 255, 255, 0.5);
-  padding: 8px;
+  padding: 8px 12px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
-.zoom-btn {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  background: transparent;
+.zoom-input {
+  width: 50px;
+  height: 24px;
   border: none;
-  color: #64748b;
-}
-
-.zoom-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.9);
-  color: #0284c7;
-}
-
-.zoom-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
-.zoom-text {
-  min-width: 60px;
-  text-align: center;
+  background: transparent;
   font-size: 14px;
   font-weight: 600;
   color: #64748b;
   font-family: ui-monospace, monospace;
+  text-align: right;
+  outline: none;
+}
+
+.zoom-input:focus {
+  color: #0284c7;
+}
+
+.zoom-input::-webkit-outer-spin-button,
+.zoom-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.zoom-unit {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  margin-right: 8px;
+}
+
+.zoom-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  padding-left: 8px;
+  border-left: 1px solid rgba(148, 163, 184, 0.3);
 }
 
 /* 导出按钮 */

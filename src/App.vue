@@ -5,7 +5,7 @@ import MermaidPreview from './components/preview/MermaidPreview.vue';
 import Toolbar from './components/toolbar/Toolbar.vue';
 import { useMermaid } from './composables/useMermaid';
 import { useExport } from './composables/useExport';
-import type { ExportFormat } from '@/types';
+import type { ExportFormat, ZoomLevel } from '@/types';
 
 // 组合式函数
 const {
@@ -14,9 +14,6 @@ const {
   clearCode,
   pasteCode,
   copyCode,
-  zoomIn,
-  zoomOut,
-  resetZoom,
 } = useMermaid();
 
 const { exportImage, isExporting } = useExport();
@@ -45,21 +42,14 @@ const handleRedo = () => {
   // CodeMirror 自带重做
 };
 
-const handleZoomIn = () => {
-  zoomIn();
-};
-
-const handleZoomOut = () => {
-  zoomOut();
-};
-
-const handleZoomReset = () => {
-  resetZoom();
-};
-
 const handleExport = async (format: ExportFormat) => {
   const element = previewRef.value?.getPreviewElement() || null;
   await exportImage(element, format, `mermaid-${Date.now()}`);
+};
+
+// 预览区域缩放变化
+const handleZoomChange = (newZoom: ZoomLevel) => {
+  zoom.value = newZoom;
 };
 
 // 键盘快捷键
@@ -95,9 +85,7 @@ const handleKeydown = (e: KeyboardEvent) => {
         @copy="handleCopy"
         @undo="handleUndo"
         @redo="handleRedo"
-        @zoom-in="handleZoomIn"
-        @zoom-out="handleZoomOut"
-        @zoom-reset="handleZoomReset"
+        @zoom-change="handleZoomChange"
         @export="handleExport"
       />
     </div>
@@ -105,7 +93,7 @@ const handleKeydown = (e: KeyboardEvent) => {
     <!-- 主内容区 -->
     <main class="main-content flex-1 flex gap-8">
       <!-- 左侧：代码编辑区 -->
-      <section class="editor-card card-glass rounded-3xl flex-1 flex flex-col overflow-hidden">
+      <section class="editor-card card-glass rounded-3xl flex-1 flex flex-col">
         <div class="card-header">
           <div class="flex items-center gap-3">
             <div class="header-icon">
@@ -118,7 +106,7 @@ const handleKeydown = (e: KeyboardEvent) => {
           <span class="char-count">{{ code.length }} 字符</span>
         </div>
 
-        <div class="card-body flex-1 relative">
+        <div class="card-body flex-1 relative overflow-hidden">
           <CodeEditor
             v-model="code"
           />
@@ -127,7 +115,7 @@ const handleKeydown = (e: KeyboardEvent) => {
       </section>
 
       <!-- 右侧：预览区 -->
-      <section class="preview-card card-glass rounded-3xl flex-1 flex flex-col overflow-hidden">
+      <section class="preview-card card-glass rounded-3xl flex-1 flex flex-col">
         <div class="card-header">
           <div class="flex items-center gap-3">
             <div class="header-icon">
@@ -141,11 +129,12 @@ const handleKeydown = (e: KeyboardEvent) => {
           <span class="zoom-badge">{{ Math.round(zoom * 100) }}%</span>
         </div>
 
-        <div class="card-body flex-1 relative">
+        <div class="card-body flex-1 relative overflow-hidden">
           <MermaidPreview
             ref="previewRef"
             :code="code"
             :zoom="zoom"
+            @zoom-change="handleZoomChange"
           />
         </div>
       </section>
@@ -233,5 +222,6 @@ const handleKeydown = (e: KeyboardEvent) => {
 .card-body {
   padding: 16px;
   background: rgba(255, 255, 255, 0.35);
+  min-height: 0;
 }
 </style>

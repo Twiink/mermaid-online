@@ -7,7 +7,7 @@ export interface MermaidError {
 }
 
 // 预览缩放比例
-export type ZoomLevel = 0.5 | 0.75 | 1 | 1.25 | 1.5 | 2 | 2.5 | 3;
+export type ZoomLevel = 0.01 | 0.1 | 0.25 | 0.5 | 0.75 | 1 | 1.25 | 1.5 | 2 | 2.5 | 3 | 4 | 5 | 6 | 7 | 8;
 
 // 导出格式
 export type ExportFormat = 'png' | 'svg';

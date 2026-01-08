@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'rendered'): void;
   (e: 'error', error: Error): void;
+  (e: 'zoomChange', zoom: ZoomLevel): void;
 }>();
 
 const previewRef = ref<HTMLDivElement>();
@@ -20,30 +21,44 @@ const errorMessage = ref<string>();
 const isCopied = ref(false);
 const hasError = ref(false);
 
-// 拖拽状态
+// 画布拖拽状态
 const isDragging = ref(false);
 const startX = ref(0);
 const startY = ref(0);
-const scrollLeft = ref(0);
-const scrollTop = ref(0);
+const translateX = ref(0);
+const translateY = ref(0);
+const lastTranslateX = ref(0);
+const lastTranslateY = ref(0);
+
+// 缩放状态
+const currentZoom = ref<ZoomLevel>(1);
+
+// 缩放限制
+const MIN_ZOOM = 0.01;
+const MAX_ZOOM = 8;
+
+// 监听父组件传入的缩放值变化
+watch(() => props.zoom, (newZoom) => {
+  currentZoom.value = newZoom;
+});
 
 const handleMouseDown = (e: MouseEvent) => {
   if (!previewRef.value) return;
   isDragging.value = true;
-  startX.value = e.pageX;
-  startY.value = e.pageY;
-  scrollLeft.value = previewRef.value.scrollLeft;
-  scrollTop.value = previewRef.value.scrollTop;
+  startX.value = e.clientX;
+  startY.value = e.clientY;
+  lastTranslateX.value = translateX.value;
+  lastTranslateY.value = translateY.value;
   previewRef.value.style.cursor = 'grabbing';
 };
 
 const handleMouseMove = (e: MouseEvent) => {
   if (!isDragging.value || !previewRef.value) return;
   e.preventDefault();
-  const dx = e.pageX - startX.value;
-  const dy = e.pageY - startY.value;
-  previewRef.value.scrollLeft = scrollLeft.value - dx;
-  previewRef.value.scrollTop = scrollTop.value - dy;
+  const dx = e.clientX - startX.value;
+  const dy = e.clientY - startY.value;
+  translateX.value = lastTranslateX.value + dx;
+  translateY.value = lastTranslateY.value + dy;
 };
 
 const handleMouseUp = () => {
@@ -57,6 +72,27 @@ const handleMouseLeave = () => {
     handleMouseUp();
   }
 };
+
+// 双击重置位置
+const handleDoubleClick = () => {
+  translateX.value = 0;
+  translateY.value = 0;
+};
+
+// 鼠标滚轮缩放
+const handleWheel = (e: WheelEvent) => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, currentZoom.value + delta));
+    currentZoom.value = newZoom as ZoomLevel;
+  }
+};
+
+// 监听缩放变化，同步到父组件
+watch(currentZoom, (newZoom) => {
+  emit('zoomChange', newZoom);
+});
 
 // 复制错误信息
 const copyError = async () => {
@@ -153,49 +189,56 @@ defineExpose({
 </script>
 
 <template>
-  <div class="mermaid-preview-container h-full w-full flex flex-col">
-    <!-- 预览区域 - 可拖拽 -->
+  <div class="mermaid-preview-container h-full w-full">
+    <!-- 预览区域 - 画布式拖拽 -->
     <div
       ref="previewRef"
-      class="mermaid-preview flex items-center justify-center"
-      :style="{ transform: `scale(${zoom})`, transformOrigin: 'center center' }"
-      @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mouseleave="handleMouseLeave"
+      class="mermaid-preview"
     >
-      <Transition name="fade" mode="out-in">
-        <div v-if="isLoading" class="loading-state">
-          <div class="spinner"></div>
-          <span>渲染中...</span>
-        </div>
-        <!-- 错误状态 -->
-        <div v-else-if="hasError" class="error-preview">
-          <div class="error-icon-large">
-            <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+      <!-- 内容区域 - 可缩放、可移动 -->
+      <div
+        class="preview-content"
+        :style="{ transform: `translate(${translateX}px, ${translateY}px) scale(${currentZoom})` }"
+        @mousedown="handleMouseDown"
+        @mousemove="handleMouseMove"
+        @mouseup="handleMouseUp"
+        @mouseleave="handleMouseLeave"
+        @dblclick="handleDoubleClick"
+        @wheel="handleWheel"
+      >
+        <Transition name="fade" mode="out-in">
+          <div v-if="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <span>渲染中...</span>
           </div>
-          <div class="error-content">
-            <p class="error-text">{{ errorMessage }}</p>
-            <button
-              class="copy-btn"
-              :class="{ copied: isCopied }"
-              @click="copyError"
-            >
-              <svg v-if="!isCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          <!-- 错误状态 -->
+          <div v-else-if="hasError" class="error-preview">
+            <div class="error-icon-large">
+              <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
-              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              {{ isCopied ? '已复制' : '复制' }}
-            </button>
+            </div>
+            <div class="error-content">
+              <p class="error-text">{{ errorMessage }}</p>
+              <button
+                class="copy-btn"
+                :class="{ copied: isCopied }"
+                @click="copyError"
+              >
+                <svg v-if="!isCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ isCopied ? '已复制' : '复制' }}
+              </button>
+            </div>
           </div>
-        </div>
-        <!-- SVG 内容 -->
-        <div v-else class="svg-container" v-html="svgContent"></div>
-      </Transition>
+          <!-- SVG 内容 -->
+          <div v-else class="svg-container" v-html="svgContent"></div>
+        </Transition>
+      </div>
     </div>
   </div>
 </template>
@@ -204,22 +247,28 @@ defineExpose({
 .mermaid-preview-container {
   background: rgba(255, 255, 255, 0.4);
   border-radius: 16px;
-  overflow: hidden;
   height: 100%;
+  overflow: hidden;
 }
 
 .mermaid-preview {
   height: 100%;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 24px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
   cursor: grab;
+  position: relative;
 }
 
 .mermaid-preview:active {
   cursor: grabbing;
+}
+
+.preview-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 空状态 */

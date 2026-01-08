@@ -137,8 +137,16 @@ defineExpose({
 
 <style scoped>
 .code-editor {
-  overflow: auto;
+  height: 100%;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.2);
+}
+
+.code-editor :deep(.cm-editor) {
+  height: 100%;
+}
+
+.code-editor :deep(.cm-scroller) {
+  overflow: auto;
 }
 </style>
