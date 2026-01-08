@@ -27,6 +27,9 @@ const glassEditorTheme = EditorView.theme({
     height: '100%',
     fontSize: '15px',
   },
+  '.cm-scroller': {
+    overflow: 'auto',
+  },
   '.cm-content': {
     caretColor: '#0f172a',
     fontFamily: "'Fira Code', 'JetBrains Mono', 'Monaco', 'Consolas', monospace",
@@ -134,7 +137,7 @@ defineExpose({
 
 <style scoped>
 .code-editor {
-  overflow: hidden;
+  overflow: auto;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.2);
 }
