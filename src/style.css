@@ -19,86 +19,19 @@
 
 body {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  /* Clean, fresh sky gradient background */
+  background-color: #f0f9ff;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(186, 230, 253, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(56, 189, 248, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(14, 165, 233, 0.15) 0%, transparent 50%);
   background-attachment: fixed;
+  color: #334155;
 }
 
 #app {
   width: 100%;
   min-height: 100vh;
-}
-
-/* 毛玻璃基础样式 */
-.glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.glass-dark {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* 按钮样式 */
-.glass-btn {
-  @apply px-4 py-2 rounded-lg transition-all duration-200;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-}
-
-.glass-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
-}
-
-.glass-btn:active {
-  transform: translateY(0);
-}
-
-.glass-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* CodeMirror 自定义样式 */
-.cm-editor {
-  height: 100%;
-  font-size: 14px;
-}
-
-.cm-scroller {
-  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace !important;
-}
-
-.cm-content {
-  padding: 16px !important;
-}
-
-/* Mermaid 预览容器 */
-.mermaid-preview {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 错误提示样式 */
-.error-tooltip {
-  @apply absolute z-50 px-3 py-2 text-sm rounded-lg shadow-lg;
-  background: rgba(239, 68, 68, 0.95);
-  color: white;
-  backdrop-filter: blur(8px);
-  max-width: 300px;
 }
 
 /* 滚动条样式 */
@@ -108,15 +41,64 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(148, 163, 184, 0.5);
 }
+
+/* CodeMirror scrollbar */
+.cm-scroller::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.cm-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* 入场动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* 延迟动画 */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }

@@ -21,37 +21,55 @@ const editorRef = ref<HTMLDivElement>();
 const viewRef = shallowRef<EditorView>();
 
 // 自定义主题 - 适配毛玻璃风格
-const glassTheme = EditorView.theme({
+const glassEditorTheme = EditorView.theme({
   '&': {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    color: '#e0e0e0',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    color: '#334155',
     height: '100%',
+    fontSize: '15px',
   },
   '.cm-content': {
-    caretColor: '#ffffff',
-    fontFamily: "'Fira Code', 'Monaco', 'Consolas', monospace",
+    caretColor: '#0f172a',
+    fontFamily: "'Fira Code', 'JetBrains Mono', 'Monaco', 'Consolas', monospace",
+    lineHeight: '1.7',
   },
   '.cm-cursor': {
-    borderLeftColor: '#ffffff',
+    borderLeftColor: '#0f172a',
+    borderLeftWidth: '2px',
   },
   '.cm-gutters': {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    color: '#888',
-    borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    color: '#94a3b8',
+    borderRight: '1px solid rgba(255, 255, 255, 0.3)',
+    paddingRight: '8px',
   },
   '.cm-activeLineGutter': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    color: '#fff',
+    backgroundColor: 'rgba(14, 165, 233, 0.1)',
+    color: '#0ea5e9',
   },
   '.cm-activeLine': {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(14, 165, 233, 0.05)',
   },
   '.cm-errorLine': {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-    borderLeft: '2px solid #ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    borderLeft: '3px solid #ef4444',
   },
   '.cm-selectionBackground': {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(56, 189, 248, 0.2) !important',
+  },
+  '&.cm-focused .cm-selectionBackground': {
+    backgroundColor: 'rgba(56, 189, 248, 0.3) !important',
+  },
+  '.cm-line': {
+    padding: '4px 0',
+  },
+  '.cm-matchingBracket': {
+    backgroundColor: 'rgba(14, 165, 233, 0.15)',
+    borderRadius: '2px',
+  },
+  '.cm-nonmatchingBracket': {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderRadius: '2px',
   },
 });
 
@@ -65,7 +83,7 @@ onMounted(() => {
       markdown(),
       keymap.of([indentWithTab, ...defaultKeymap]),
       syntaxHighlighting(defaultHighlightStyle),
-      glassTheme,
+      glassEditorTheme,
       EditorView.lineWrapping,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {
@@ -127,6 +145,7 @@ defineExpose({
 <style scoped>
 .code-editor {
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.2);
 }
 </style>
