@@ -18,15 +18,6 @@ jobs:
       - name: build
         run: npm install && npm run build
 
-      - name: Validate SSH key (no CRLF)
-        shell: bash
-        run: |
-          mkdir -p ~/.ssh
-          printf '%s' "${{ secrets.SERVER_SSH_KEY }}" | tr -d '\r' > ~/.ssh/_check_key
-          chmod 600 ~/.ssh/_check_key
-          ssh-keygen -y -f ~/.ssh/_check_key >/dev/null
-          echo "SSH key OK"
-
       - name: deploy
         uses: easingthemes/ssh-deploy@v2.1.5
         with:
