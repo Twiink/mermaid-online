@@ -18,36 +18,13 @@ jobs:
       - name: build
         run: npm install && npm run build
 
-      - name: Decode key and pass to ssh-deploy
-        id: key
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.ssh
-
-          # 1) 从 base64 secret 还原成私钥文件
-          printf '%s' "${{ secrets.SERVER_SSH_KEY }}" | base64 -d > ~/.ssh/deploy_key.raw
-
-          # 2) 去掉 CRLF + 去掉每行开头可能出现的空格/Tab（关键！）
-          #    OpenSSH 私钥每行必须严格对齐，前导空格会直接导致 libcrypto
-          sed -e 's/\r$//' -e 's/^[[:space:]]\+//' ~/.ssh/deploy_key.raw > ~/.ssh/deploy_key
-
-          chmod 600 ~/.ssh/deploy_key
-
-          # 3) 校验私钥可解析
-          ssh-keygen -y -f ~/.ssh/deploy_key >/dev/null
-          echo "SSH key OK"
-
-          # 4) 作为 step output 传递（注意：写入时不要让 YAML 注入缩进）
-          echo "private_key<<EOF" >> "$GITHUB_OUTPUT"
-          cat ~/.ssh/deploy_key >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-
-      - name: deploy
-        uses: easingthemes/ssh-deploy@v2.1.5
+      - name: Deploy (SCP)
+        uses: appleboy/scp-action@v0.1.7
         with:
-          REMOTE_HOST: "149.88.71.81"
-          REMOTE_USER: "root"
-          REMOTE_PORT: 22
-          SSH_PRIVATE_KEY: ${{ steps.key.outputs.private_key }}
-          TARGET: "/www/wwwroot/mermaid/"
+          host: 149.88.71.81
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          source: "dist/*"
+          target: "/www/wwwroot/mermaid/"
+          strip_components: 1
