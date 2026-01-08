@@ -18,6 +18,23 @@ jobs:
       - name: build
         run: npm install && npm run build
 
+      - name: Decode & validate SSH key
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.SERVER_SSH_KEY }}" | base64 -d > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          ssh-keygen -y -f ~/.ssh/key >/dev/null
+          echo "SSH key OK"
+
+      - name: Export key for ssh-deploy
+        shell: bash
+        run: |
+          echo "DEPLOY_KEY<<'EOF'" >> $GITHUB_ENV
+          cat ~/.ssh/key >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+
       - name: deploy
         uses: easingthemes/ssh-deploy@v2.1.5
         with:
