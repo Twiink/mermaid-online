@@ -30,10 +30,10 @@ jobs:
       - name: Export key for ssh-deploy
         shell: bash
         run: |
-          echo "DEPLOY_KEY<<'EOF'" >> $GITHUB_ENV
+          echo "DEPLOY_KEY<<EOF" >> $GITHUB_ENV
           cat ~/.ssh/key >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-
+      
 
       - name: deploy
         uses: easingthemes/ssh-deploy@v2.1.5
